@@ -38,7 +38,8 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json`):
 {
   "mcpServers": {
     "zvex": {
-      "command": "zvex",
+      "command": "uvx",
+      "args": ["zvex"],
       "env": {
         "ZVEX_API_KEY": "zvex-your-key-here"
       }
