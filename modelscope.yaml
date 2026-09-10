@@ -1,0 +1,46 @@
+name: zvex
+version: 0.1.1
+icon: https://tts.xalhar.top/static/assets/brand/icon.png
+description: AI 视频译制 MCP 服务 —— 把一个视频链接交给 AI 助手，拿回多语种配音成片，保留原说话人的音色。
+description_en: AI video dubbing MCP server — hand your AI assistant a video URL and get back a dubbed video that keeps the original speakers' voices.
+
+mcp:
+  name: zvex
+  transport:
+    - stdio
+  port: 8000
+
+tools:
+  - name: estimate_cost
+    description: 按时长预估积分消耗，并返回账户当前余额。
+    description_en: Estimate the credit cost of dubbing a video and check the credit balance.
+  - name: submit_dubbing_job
+    description: 提交一个全自动译制任务（视频直链 + 目标语言），返回任务号，后台自动完成识别、翻译、配音与合成。
+    description_en: Submit a fully automatic dubbing job (video URL + target language) and return a job id.
+  - name: get_job_status
+    description: 查询任务状态；完成时附带成片与字幕的下载链接，失败时说明原因并已退款。
+    description_en: Check a dubbing job's status; final states carry the output URLs.
+  - name: wait_for_job
+    description: 阻塞等待任务到达终态再返回结果，适合直接用成片的场景。
+    description_en: Block until a dubbing job reaches a final state, then return its result.
+
+categories:
+  - video
+  - audio
+  - translation
+
+tags:
+  - mcp
+  - video
+  - dubbing
+  - translation
+  - tts
+  - 视频译制
+  - 配音
+  - 翻译
+  - 俄语
+  - 出海
+
+install:
+  pypi: zvex
+  command: uvx zvex

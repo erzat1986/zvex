@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# venv（含测试用的）
+.venv/
+.venv-*/
+venv/
+
+# 本地产物与密钥
+.env
+*.db
+.mcpregistry_*

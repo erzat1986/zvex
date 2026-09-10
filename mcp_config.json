@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "zvex": {
+      "command": "uvx",
+      "args": ["zvex"],
+      "env": {
+        "ZVEX_API_KEY": "<your-zvex-api-key>"
+      }
+    }
+  }
+}
