@@ -29,6 +29,7 @@ pip install zvex
 
 Jobs are billed from the same credit balance as the web app, at a flat
 **10 credits per minute** of video. A failed job is refunded in full.
+Top-up supports **WeChat Pay, Alipay and PayPal**.
 
 ## Configure your MCP client
 
@@ -81,6 +82,26 @@ wait_for_job(42)
 - One job per account runs at a time; a second submission returns HTTP 409.
 - Output links are served from the zvex domain and require being signed
   in there.
+
+## Alipay AI Pay agents (zero sign-up)
+
+If your agent is wired into **Alipay AI Pay** (the A2M 402 protocol —
+OpenClaw-style clients), you can skip sign-up and top-up entirely and pay
+per call:
+
+| Resource | Endpoint | Pricing |
+|---|---|---|
+| Text translation | `POST https://tts.xalhar.top/a2m/v1/translate` | ¥0.1 / call |
+| Video dubbing | `POST https://tts.xalhar.top/a2m/v1/dubbing` | ¥1 / minute (min ¥2, billed on measured duration) |
+
+Flow: call without credentials → `402` + `Payment-Needed` signed bill →
+pay via Alipay AI Pay → retry with `Payment-Proof` → resource delivered.
+Dubbing is asynchronous; poll `/a2m/v1/dubbing/status/{out_trade_no}` for
+the finished video and subtitles.
+
+Both services are live on the Alipay AI Pay service bazaar (search
+"声桥" or "zvex"). Protocol details: <https://tts.xalhar.top/docs/mcp>.
+Regular MCP clients without 402 support should use the API-key path above.
 
 ## Development
 

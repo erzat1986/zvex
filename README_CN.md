@@ -20,7 +20,7 @@ pip install zvex
 2. 进入 **账户设置 → API 密钥**
 3. 创建一个，复制 `zvex-` 开头的那串 —— **只显示一次，请立即保存**
 
-任务与网页端共用同一个积分余额，**10 积分 / 分钟**；任务失败或取消**全额退还**。
+任务与网页端共用同一个积分余额，**10 积分 / 分钟**；任务失败或取消**全额退还**。充值支持**微信支付、支付宝、PayPal**。
 
 ## 配置到客户端
 
@@ -80,6 +80,19 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
 | `400 … 非公网地址` | 视频链接指向了内网地址，换公网直链 |
 
 详细的接入说明与截图见 <https://tts.xalhar.top/docs/mcp>。
+
+## 支付宝 AI 付智能体：零注册直连
+
+如果你的智能体接入了**支付宝 AI 付**（A2M 402 协议，如 OpenClaw 类客户端），可以完全跳过注册和充值，按次自动结算：
+
+| 资源 | 端点 | 计价 |
+|---|---|---|
+| 多语种文本翻译 | `POST https://tts.xalhar.top/a2m/v1/translate` | ¥0.1 / 次 |
+| AI 视频配音 | `POST https://tts.xalhar.top/a2m/v1/dubbing` | ¥1 / 分钟（最低 ¥2，按实测时长动态计费） |
+
+流程：无凭证调用 → `402` + `Payment-Needed` 签名账单 → 智能体经支付宝 AI 付付款 → 携带 `Payment-Proof` 重试 → 交付资源。配音为异步任务，凭 `out_trade_no` 轮询 `/a2m/v1/dubbing/status/{out_trade_no}` 获取成片。
+
+两个服务均已上架支付宝 AI 付服务市场（搜索"声桥"或"zvex"）。协议细节见 <https://tts.xalhar.top/docs/mcp>。普通 MCP 客户端（不支持 402 协议的）请继续使用上方的 API 密钥方式。
 
 ## 开发
 
