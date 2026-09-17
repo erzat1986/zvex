@@ -1,4 +1,4 @@
-"""声桥( zvex / zvex ) MCP server。
+"""zvex(声桥) MCP server。
 
 把声桥的 AI 视频译制能力暴露给任意 MCP 客户端(Claude Desktop / Cursor / …):
 给一个视频链接,拿回多语种配音成片。全自动——服务端一阶段(识别/翻译)完成后
@@ -21,9 +21,13 @@ import sys
 
 import httpx
 from mcp.server.mcpserver import MCPServer
+from mcp.types import ToolAnnotations
 
 DEFAULT_BASE_URL = "https://tts.xalhar.top"
-_REQUEST_TIMEOUT = 120.0  # 提交含服务端下载视频,给足时间
+# 提交接口要等服务端把视频**下载完**才返回，几百 MB 的素材可能好几分钟。
+# 2026-09-11 实测：一个 170MB 视频下载超过 120 秒 → 客户端抛异常，而服务端
+# 其实已经建单扣费，客户以为失败、实际在跑还扣了钱。放宽到 15 分钟。
+_REQUEST_TIMEOUT = 900.0
 _CONNECT_TIMEOUT = 15.0
 _POLL_INTERVAL = 15.0
 
@@ -31,13 +35,31 @@ _POLL_INTERVAL = 15.0
 _STATUS_HINTS = {
     401: "API key is missing, invalid, or revoked. Create a new one at "
          "https://tts.xalhar.top/app/settings (Account → API keys).",
-    402: "Not enough credits. Top up at https://tts.xalhar.top/app/pricing.",
+    402: "Not enough credits. Top up at https://tts.xalhar.top/app/recharge.",
     409: "Another job of this account is still running — wait for it to finish "
          "(one concurrent job per account).",
     400: "The request was rejected by the server; see the detail above.",
 }
 
 mcp = MCPServer("zvex")
+
+# 工具注解:客户端(Claude/OpenAI 目录)据此判断能否自动批准调用。
+# 四个 hint 必须全部显式给布尔值——目录审核要求,缺一个就判不合格。
+# 只读查询:不改环境、重复调用无副作用、会访问外部服务。
+_READ_ONLY = ToolAnnotations(
+    read_only_hint=True,
+    destructive_hint=False,
+    idempotent_hint=True,
+    open_world_hint=True,
+)
+# 提交译制任务:创建任务并扣费(非破坏性新增),但每次调用都建新单,
+# 同参数重复提交会重复扣费 —— 因此不是幂等的。
+_SUBMIT = ToolAnnotations(
+    read_only_hint=False,
+    destructive_hint=False,
+    idempotent_hint=False,
+    open_world_hint=True,
+)
 
 
 def _api_key() -> str:
@@ -93,7 +115,7 @@ def _dump(payload: dict) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 async def estimate_cost(minutes: float, tier: str = "standard") -> str:
     """Estimate the credit cost of dubbing a video and check the credit balance.
 
@@ -114,7 +136,7 @@ async def estimate_cost(minutes: float, tier: str = "standard") -> str:
     return _dump(resp.json())
 
 
-@mcp.tool()
+@mcp.tool(annotations=_SUBMIT)
 async def submit_dubbing_job(
     video_url: str,
     target_language: str = "ru",
@@ -150,7 +172,7 @@ async def submit_dubbing_job(
     return _dump(_absolutize(resp.json()))
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 async def get_job_status(job_id: int) -> str:
     """Check a dubbing job's status.
 
@@ -172,7 +194,7 @@ async def get_job_status(job_id: int) -> str:
     return _dump(_absolutize(resp.json()))
 
 
-@mcp.tool()
+@mcp.tool(annotations=_READ_ONLY)
 async def wait_for_job(job_id: int, timeout_seconds: int = 1800) -> str:
     """Block until a dubbing job reaches a final state, then return its result.
 
