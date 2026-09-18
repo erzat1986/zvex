@@ -2,9 +2,9 @@
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/erzat1986-zvex-1tz743)](https://m8ven.ai/mcp/erzat1986-zvex-1tz743)
 
-AI video dubbing as an MCP tool: hand it a video URL, get back a fully dubbed
-video in Russian, English or Spanish — keeping the original speakers' voices
-through per-speaker voice cloning.
+AI video dubbing as an MCP tool: hand it a video URL or a local file, get back
+a fully dubbed video in Russian, English or Spanish — keeping the original
+speakers' voices through per-speaker voice cloning.
 
 Powered by [zvex (声桥)](https://tts.xalhar.top).
 
@@ -61,29 +61,42 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json`):
 | Tool | Purpose |
 |---|---|
 | `estimate_cost(minutes, tier)` | Credit cost and current balance |
-| `submit_dubbing_job(video_url, target_language, tier)` | Queue a dubbing job, returns `job_id` |
+| `upload_video(file_path)` | Upload a local file, returns a `file_id` |
+| `submit_dubbing_job(video_url, target_language, tier, file_id)` | Queue a dubbing job, returns `job_id` |
 | `get_job_status(job_id)` | Poll once; final states carry the output URLs |
 | `wait_for_job(job_id, timeout_seconds)` | Block until the job finishes |
 
-Typical flow:
+Typical flow — public URL:
 
 ```
-submit_dubbing_job("https://example.com/episode-01.mp4", target_language="ru")
+submit_dubbing_job(video_url="https://example.com/episode-01.mp4", target_language="ru")
   → {"job_id": 42, "credits_cost": 240, "duration_sec": 1441.0, …}
 wait_for_job(42)
   → {"status": "completed", "final_video_url": "…", "subtitle_url": "…"}
 ```
 
+Typical flow — local file (no public URL needed):
+
+```
+upload_video("/home/me/clip.mov")
+  → {"file_id": "a1b2c3d4e5f60718", "duration_sec": 92.4, …}
+submit_dubbing_job(file_id="a1b2c3d4e5f60718", target_language="ru")
+  → {"job_id": 43, …}
+```
+
 ### Notes
 
+- `submit_dubbing_job` takes **exactly one** of `video_url` or `file_id`.
 - `video_url` must be a publicly reachable `http(s)` link, up to 500 MB.
+- `upload_video` sends the file to the server (up to 500 MB); the uploaded
+  copy persists, so one upload can back several submissions.
 - `target_language` depends on the deployment (`ru`, `en`, `es` on the hosted
   service).
 - `tier` is `fast`, `standard` or `professional` — it selects which features
   are available, not the price.
 - One job per account runs at a time; a second submission returns HTTP 409.
-- Output links are served from the zvex domain and require being signed
-  in there.
+- Output links are signed, time-limited URLs (valid ~24 h) — they download
+  without signing in. Re-poll the job to get a fresh link once one expires.
 
 ## No expert mode over MCP — use the web app for that
 

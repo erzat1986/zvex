@@ -2,7 +2,7 @@
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/erzat1986-zvex-1tz743)](https://m8ven.ai/mcp/erzat1986-zvex-1tz743)
 
-把 AI 视频译制能力接进你的 AI 助手：给它一个视频链接，拿回配音成片 —— 支持俄语、英语、西班牙语，**保留原说话人的音色**（按角色做音色克隆）。
+把 AI 视频译制能力接进你的 AI 助手：给它一个视频链接或本地文件，拿回配音成片 —— 支持俄语、英语、西班牙语，**保留原说话人的音色**（按角色做音色克隆）。
 
 由 [zvex（声桥）](https://tts.xalhar.top) 提供。服务端是纯 HTTP 客户端，本地不需要 GPU、不需要下载模型。
 
@@ -52,11 +52,12 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
 | 工具 | 作用 |
 |---|---|
 | `estimate_cost(minutes, tier)` | 按时长预估积分消耗，返回当前余额 |
-| `submit_dubbing_job(video_url, target_language, tier)` | 提交译制任务，返回任务号 |
+| `upload_video(file_path)` | 上传本地视频文件，返回 `file_id` |
+| `submit_dubbing_job(video_url, target_language, tier, file_id)` | 提交译制任务，返回任务号 |
 | `get_job_status(job_id)` | 查询任务状态；完成时带回成片与字幕链接 |
 | `wait_for_job(job_id, timeout_seconds)` | 阻塞等待任务出结果 |
 
-典型用法：
+典型用法 —— 公网链接：
 
 ```
 帮我把它译制成俄语：https://example.com/episode-01.mp4
@@ -64,13 +65,24 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
   → 返回成片链接
 ```
 
+典型用法 —— 本地文件（不需要公网地址）：
+
+```
+译制一下 /home/me/clip.mov
+  → 助手调用 upload_video 拿到 file_id
+  → submit_dubbing_job(file_id=…) 再 wait_for_job
+  → 返回成片链接
+```
+
 ## 注意事项
 
+- `submit_dubbing_job` 的 `video_url` 与 `file_id` **二选一**，必须给且只能给一个
 - `video_url` 必须是**公网可访问**的 http(s) 直链，单个不超过 **500MB**
+- `upload_video` 会把文件传到服务端（上限 500MB）；上传后的副本会保留，同一个 `file_id` 可重复用于多次提交
 - 目标语言以部署支持集为准（当前 `ru` / `en` / `es`）
 - `tier` 取 `fast` / `standard` / `professional`，只决定功能范围，**不改变价格**
 - 每个账号同一时间只跑一个任务，重复提交返回 409
-- 成片与字幕链接由 zvex 域名提供，**需要在浏览器里登录该站**才能下载
+- 成片与字幕链接是**带签名的限时链接**（约 24 小时有效），无需登录即可下载；过期后重新查一次任务即可拿到新链接
 
 ## 常见报错
 

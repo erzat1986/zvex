@@ -1,8 +1,8 @@
 name: zvex
-version: 0.1.3
+version: 0.1.4
 icon: https://tts.xalhar.top/static/assets/brand/icon.png
-description: AI 视频译制 MCP 服务 —— 把一个视频链接交给 AI 助手，拿回多语种配音成片，保留原说话人的音色。
-description_en: AI video dubbing MCP server — hand your AI assistant a video URL and get back a dubbed video that keeps the original speakers' voices.
+description: AI 视频译制 MCP 服务 —— 把一个视频链接或本地视频文件交给 AI 助手，拿回多语种配音成片，保留原说话人的音色。
+description_en: AI video dubbing MCP server — hand your AI assistant a video URL or a local file and get back a dubbed video that keeps the original speakers' voices.
 
 mcp:
   name: zvex
@@ -14,9 +14,12 @@ tools:
   - name: estimate_cost
     description: 按时长预估积分消耗，并返回账户当前余额。
     description_en: Estimate the credit cost of dubbing a video and check the credit balance.
+  - name: upload_video
+    description: 上传本地视频文件到服务端，返回 file_id，供没有公网直链的场景使用；上传后的副本会保留，可重复用于多次提交。
+    description_en: Upload a local video file and get a file_id for dubbing; the uploaded copy persists and can back several submissions.
   - name: submit_dubbing_job
-    description: 提交一个全自动译制任务（视频直链 + 目标语言），返回任务号，后台自动完成识别、翻译、配音与合成。
-    description_en: Submit a fully automatic dubbing job (video URL + target language) and return a job id.
+    description: 提交一个全自动译制任务（视频直链或 file_id 二选一 + 目标语言），返回任务号，后台自动完成识别、翻译、配音与合成。
+    description_en: Submit a fully automatic dubbing job (either a video URL or a file_id, plus target language) and return a job id.
   - name: get_job_status
     description: 查询任务状态；完成时附带成片与字幕的下载链接，失败时说明原因并已退款。
     description_en: Check a dubbing job's status; final states carry the output URLs.

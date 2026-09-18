@@ -1,8 +1,8 @@
 """zvex(声桥) MCP server。
 
 把声桥的 AI 视频译制能力暴露给任意 MCP 客户端(Claude Desktop / Cursor / …):
-给一个视频链接,拿回多语种配音成片。全自动——服务端一阶段(识别/翻译)完成后
-自动衔接二阶段(配音/合成),不需要人工校正环节。
+给一个视频链接或本地文件,拿回多语种配音成片。全自动——服务端一阶段
+(识别/翻译)完成后自动衔接二阶段(配音/合成),不需要人工校正环节。
 
 鉴权走声桥 API Key(网页「账户设置 → API 密钥」创建,zvex- 开头),与网页端
 共用同一个账户积分池;提交时按服务端 ffprobe 实测时长预扣,任务失败全额退款。
@@ -17,6 +17,7 @@ import asyncio
 import json
 import logging
 import os
+import pathlib
 import sys
 
 import httpx
@@ -55,6 +56,14 @@ _READ_ONLY = ToolAnnotations(
 # 提交译制任务:创建任务并扣费(非破坏性新增),但每次调用都建新单,
 # 同参数重复提交会重复扣费 —— 因此不是幂等的。
 _SUBMIT = ToolAnnotations(
+    read_only_hint=False,
+    destructive_hint=False,
+    idempotent_hint=False,
+    open_world_hint=True,
+)
+# 上传本地视频:读本机文件、在服务端新建一份副本(不改本地、不删任何东西),
+# 但每次调用都产生新的 file_id,重传同一文件不会复用 —— 不是幂等的。
+_UPLOAD = ToolAnnotations(
     read_only_hint=False,
     destructive_hint=False,
     idempotent_hint=False,
@@ -136,18 +145,62 @@ async def estimate_cost(minutes: float, tier: str = "standard") -> str:
     return _dump(resp.json())
 
 
+@mcp.tool(annotations=_UPLOAD)
+async def upload_video(file_path: str) -> str:
+    """Upload a local video file to zvex and get a file_id for dubbing.
+
+    Use this when the video is a local file rather than a public URL — for
+    example a clip the user just exported, or one on a machine that is not
+    reachable from the internet. The file is sent to the server, which probes
+    its duration; the returned file_id is then passed to submit_dubbing_job.
+
+    The uploaded copy lives on the server, so the file_id stays valid for
+    later submissions — you only need to upload once per file.
+
+    Args:
+        file_path: Path to a local video file (max 500 MB).
+
+    Returns:
+        JSON with file_id, the stored filename and the measured duration_sec.
+    """
+    path = pathlib.Path(file_path).expanduser()
+    if not path.is_file():
+        return f"File not found: {path}"
+    size = path.stat().st_size
+    max_bytes = 500 * 1024 * 1024
+    if size > max_bytes:
+        return f"File is {size / 1024 / 1024:.1f} MB, over the 500 MB limit."
+    if size == 0:
+        return f"File is empty: {path}"
+    try:
+        with open(path, "rb") as fh:
+            async with _client() as client:
+                resp = await client.post(
+                    "/api/v1/files",
+                    files={"file": (path.name, fh, "application/octet-stream")},
+                )
+    except OSError as e:
+        return f"Cannot read {path}: {e}"
+    if resp.status_code >= 400:
+        return _error_text(resp)
+    return _dump(resp.json())
+
+
 @mcp.tool(annotations=_SUBMIT)
 async def submit_dubbing_job(
-    video_url: str,
+    video_url: str = "",
     target_language: str = "ru",
     tier: str = "standard",
+    file_id: str = "",
 ) -> str:
-    """Submit a fully automatic dubbing job: a video URL in, a dubbed video out.
+    """Submit a fully automatic dubbing job: a video in, a dubbed video out.
 
-    The server downloads the video, then runs speech recognition, speaker
-    separation, translation, voice cloning/TTS and composition — no manual
-    review step. Credits are charged up front based on the server-measured
-    duration and refunded in full if the job fails.
+    The source is either a public URL (video_url) or a file previously
+    uploaded with upload_video (file_id) — give exactly one of them. The
+    server then runs speech recognition, speaker separation, translation,
+    voice cloning/TTS and composition — no manual review step. Credits are
+    charged up front based on the server-measured duration and refunded in
+    full if the job fails.
 
     The job runs in the background: use get_job_status to poll it, or
     wait_for_job to block until it finishes. Only one job per account may run
@@ -158,15 +211,29 @@ async def submit_dubbing_job(
         target_language: Dubbing language, e.g. "ru", "en", "es"
             (depends on the deployment's supported set).
         tier: "fast", "standard" or "professional".
+        file_id: Alternative to video_url — the file_id returned by
+            upload_video, for local files that are not publicly reachable.
 
     Returns:
         JSON with job_id, run_id, measured duration and the charged credits.
     """
+    video_url = (video_url or "").strip()
+    file_id = (file_id or "").strip()
+    if not video_url and not file_id:
+        return ("Provide either video_url (a public http(s) link) or file_id "
+                "(from upload_video).")
+    if video_url and file_id:
+        return "Provide only one of video_url or file_id, not both."
+    body: dict[str, object] = {
+        "target_language": target_language,
+        "tier": tier,
+    }
+    if file_id:
+        body["file_id"] = file_id
+    else:
+        body["video_url"] = video_url
     async with _client() as client:
-        resp = await client.post(
-            "/api/v1/jobs",
-            json={"video_url": video_url, "target_language": target_language, "tier": tier},
-        )
+        resp = await client.post("/api/v1/jobs", json=body)
     if resp.status_code >= 400:
         return _error_text(resp)
     return _dump(_absolutize(resp.json()))
