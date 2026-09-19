@@ -87,7 +87,7 @@ submit_dubbing_job(file_id="a1b2c3d4e5f60718", target_language="ru")
 ### Notes
 
 - `submit_dubbing_job` takes **exactly one** of `video_url` or `file_id`.
-- `video_url` must be a publicly reachable `http(s)` link, up to 500 MB.
+- `video_url` must be a **publicly downloadable** `http(s)` direct link, up to 500 MB — **YouTube and other platform pages won't work** (they're not direct links; use `upload_video` for local files instead).
 - `upload_video` sends the file to the server (up to 500 MB); the uploaded
   copy persists, so one upload can back several submissions.
 - `target_language` depends on the deployment (`ru`, `en`, `es` on the hosted

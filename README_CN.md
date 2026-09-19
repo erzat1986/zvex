@@ -77,7 +77,7 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
 ## 注意事项
 
 - `submit_dubbing_job` 的 `video_url` 与 `file_id` **二选一**，必须给且只能给一个
-- `video_url` 必须是**公网可访问**的 http(s) 直链，单个不超过 **500MB**
+- `video_url` 必须是**公网可直接下载**的 http(s) 直链，单个不超过 **500MB**——**YouTube 等平台页面的链接不可用**（不是直链，服务端无法下载；本地文件请用 `upload_video`）
 - `upload_video` 会把文件传到服务端（上限 500MB）；上传后的副本会保留，同一个 `file_id` 可重复用于多次提交
 - 目标语言以部署支持集为准（当前 `ru` / `en` / `es`）
 - `tier` 取 `fast` / `standard` / `professional`，只决定功能范围，**不改变价格**
