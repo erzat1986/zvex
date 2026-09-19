@@ -9,7 +9,7 @@
 
 环境变量:
     ZVEX_API_KEY   必填,形如 zvex-xxxxxxxx
-    ZVEX_BASE_URL  可选,默认 https://tts.xalhar.top(自建部署改这里)
+    ZVEX_BASE_URL  可选,默认 https://zvex.cn(自建部署改这里)
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import httpx
 from mcp.server.mcpserver import MCPServer
 from mcp.types import ToolAnnotations
 
-DEFAULT_BASE_URL = "https://tts.xalhar.top"
+DEFAULT_BASE_URL = "https://zvex.cn"
 # 提交接口要等服务端把视频**下载完**才返回，几百 MB 的素材可能好几分钟。
 # 2026-09-11 实测：一个 170MB 视频下载超过 120 秒 → 客户端抛异常，而服务端
 # 其实已经建单扣费，客户以为失败、实际在跑还扣了钱。放宽到 15 分钟。
@@ -35,8 +35,8 @@ _POLL_INTERVAL = 15.0
 # HTTP 状态码 → 给调用方(通常是 LLM)的可执行提示
 _STATUS_HINTS = {
     401: "API key is missing, invalid, or revoked. Create a new one at "
-         "https://tts.xalhar.top/app/settings (Account → API keys).",
-    402: "Not enough credits. Top up at https://tts.xalhar.top/app/recharge.",
+         "https://zvex.cn/app/settings (Account → API keys).",
+    402: "Not enough credits. Top up at https://zvex.cn/app/recharge.",
     409: "Another job of this account is still running — wait for it to finish "
          "(one concurrent job per account).",
     400: "The request was rejected by the server; see the detail above.",
@@ -76,7 +76,7 @@ def _api_key() -> str:
     if not key:
         raise RuntimeError(
             "ZVEX_API_KEY is not set. Create a key at "
-            "https://tts.xalhar.top/app/settings and pass it via the MCP server env."
+            "https://zvex.cn/app/settings and pass it via the MCP server env."
         )
     return key
 

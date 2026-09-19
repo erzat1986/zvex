@@ -1,6 +1,6 @@
 [project]
 name = "zvex"
-version = "0.1.4"
+version = "0.1.6"
 description = "zvex (声桥) MCP server — AI video dubbing: hand it a video URL or a local file and get back a dubbed video that keeps the original speakers' voices, billed via zvex credits"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,7 @@ dependencies = [
 zvex = "zvex.server:main"
 
 [project.urls]
-Homepage = "https://tts.xalhar.top"
+Homepage = "https://zvex.cn"
 
 [build-system]
 requires = ["hatchling"]

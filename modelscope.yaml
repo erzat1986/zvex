@@ -1,6 +1,6 @@
 name: zvex
 version: 0.1.4
-icon: https://tts.xalhar.top/static/assets/brand/icon.png
+icon: https://static.zvex.cn/static/assets/brand/icon.png
 description: AI 视频译制 MCP 服务 —— 把一个视频链接或本地视频文件交给 AI 助手，拿回多语种配音成片，保留原说话人的音色。
 description_en: AI video dubbing MCP server — hand your AI assistant a video URL or a local file and get back a dubbed video that keeps the original speakers' voices.
 

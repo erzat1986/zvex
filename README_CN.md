@@ -4,7 +4,7 @@
 
 把 AI 视频译制能力接进你的 AI 助手：给它一个视频链接或本地文件，拿回配音成片 —— 支持俄语、英语、西班牙语，**保留原说话人的音色**（按角色做音色克隆）。
 
-由 [zvex（声桥）](https://tts.xalhar.top) 提供。服务端是纯 HTTP 客户端，本地不需要 GPU、不需要下载模型。
+由 [zvex（声桥）](https://zvex.cn) 提供。服务端是纯 HTTP 客户端，本地不需要 GPU、不需要下载模型。
 
 ## 安装
 
@@ -18,7 +18,7 @@ pip install zvex
 
 ## 获取 API 密钥
 
-1. 打开 <https://tts.xalhar.top> 注册（新账号送 10 分钟免费额度）
+1. 打开 <https://zvex.cn> 注册（新账号送 10 分钟免费额度）
 2. 进入 **账户设置 → API 密钥**
 3. 创建一个，复制 `zvex-` 开头的那串 —— **只显示一次，请立即保存**
 
@@ -45,7 +45,7 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
 | 环境变量 | 必填 | 默认值 | 说明 |
 |---|---|---|---|
 | `ZVEX_API_KEY` | 是 | — | 账户页创建的 `zvex-…` 密钥 |
-| `ZVEX_BASE_URL` | 否 | `https://tts.xalhar.top` | 自建部署时改这里 |
+| `ZVEX_BASE_URL` | 否 | `https://zvex.cn` | 自建部署时改这里 |
 
 ## 可用工具
 
@@ -93,15 +93,15 @@ Claude Desktop（`claude_desktop_config.json`）或 Cursor（`.cursor/mcp.json`�
 | `409 Another job … still running` | 上一个任务还没结束（单并发限制） |
 | `400 … 非公网地址` | 视频链接指向了内网地址，换公网直链 |
 
-详细的接入说明与截图见 <https://tts.xalhar.top/docs/mcp>。
+详细的接入说明与截图见 <https://zvex.cn/docs/mcp>。
 
-## MCP 不提供专家模式，需要完整专家模式请到 tts.xalhar.top
+## MCP 不提供专家模式，需要完整专家模式请到 zvex.cn
 
 MCP 侧提供的是**全自动**通路：给一个视频链接，直接拿回成片，中间没有人工校正环节。
 这是有意为之——LLM 客户端既听不了波形，也判断不了一句台词配得好不好。
 
 **专家模式没有做成 MCP 工具。** 想体验完整的专家模式，请前往
-[tts.xalhar.top](https://tts.xalhar.top)，在订单里点「校正」进入
+[zvex.cn](https://zvex.cn)，在订单里点「校正」进入
 `/expert/{run_id}` 页面。
 
 专家模式里能做什么、为什么值得去一趟：
@@ -129,12 +129,12 @@ MCP 侧提供的是**全自动**通路：给一个视频链接，直接拿回成
 
 | 资源 | 端点 | 计价 |
 |---|---|---|
-| 多语种文本翻译 | `POST https://tts.xalhar.top/a2m/v1/translate` | ¥0.1 / 次 |
-| AI 视频配音 | `POST https://tts.xalhar.top/a2m/v1/dubbing` | ¥1 / 分钟（最低 ¥2，按实测时长动态计费） |
+| 多语种文本翻译 | `POST https://zvex.cn/a2m/v1/translate` | ¥0.1 / 次 |
+| AI 视频配音 | `POST https://zvex.cn/a2m/v1/dubbing` | ¥1 / 分钟（最低 ¥2，按实测时长动态计费） |
 
 流程：无凭证调用 → `402` + `Payment-Needed` 签名账单 → 智能体经支付宝 AI 付付款 → 携带 `Payment-Proof` 重试 → 交付资源。配音为异步任务，凭 `out_trade_no` 轮询 `/a2m/v1/dubbing/status/{out_trade_no}` 获取成片。
 
-两个服务均已上架支付宝 AI 付服务市场（搜索"声桥"或"zvex"）。协议细节见 <https://tts.xalhar.top/docs/mcp>。普通 MCP 客户端（不支持 402 协议的）请继续使用上方的 API 密钥方式。
+两个服务均已上架支付宝 AI 付服务市场（搜索"声桥"或"zvex"）。协议细节见 <https://zvex.cn/docs/mcp>。普通 MCP 客户端（不支持 402 协议的）请继续使用上方的 API 密钥方式。
 
 ## 开发
 

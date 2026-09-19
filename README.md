@@ -6,7 +6,7 @@ AI video dubbing as an MCP tool: hand it a video URL or a local file, get back
 a fully dubbed video in Russian, English or Spanish — keeping the original
 speakers' voices through per-speaker voice cloning.
 
-Powered by [zvex (声桥)](https://tts.xalhar.top).
+Powered by [zvex (声桥)](https://zvex.cn).
 
 The server is a thin stdio client over zvex's HTTP API, so it runs
 anywhere Python does — no GPU, no local models.
@@ -25,7 +25,7 @@ pip install zvex
 
 ## Get an API key
 
-1. Sign in at <https://tts.xalhar.top>
+1. Sign in at <https://zvex.cn>
 2. Open **Account → API keys** and create one
 3. Copy the `zvex-…` value — it is shown **only once**
 
@@ -54,7 +54,7 @@ Claude Desktop (`claude_desktop_config.json`) or Cursor (`.cursor/mcp.json`):
 | Variable | Required | Default | Meaning |
 |---|---|---|---|
 | `ZVEX_API_KEY` | yes | — | `zvex-…` key from the account page |
-| `ZVEX_BASE_URL` | no | `https://tts.xalhar.top` | API base URL (self-hosted deployments) |
+| `ZVEX_BASE_URL` | no | `https://zvex.cn` | API base URL (self-hosted deployments) |
 
 ## Tools
 
@@ -105,7 +105,7 @@ get back a finished dub, with no review step in between. That is deliberate —
 an LLM client has no way to listen to a waveform or judge whether a line landed.
 
 **Expert mode is not exposed as an MCP tool.** For the full expert mode, go to
-[tts.xalhar.top](https://tts.xalhar.top) and open an order's **Review** page
+[zvex.cn](https://zvex.cn) and open an order's **Review** page
 (`/expert/{run_id}`).
 
 What you get there, and why it is worth the trip:
@@ -137,8 +137,8 @@ per call:
 
 | Resource | Endpoint | Pricing |
 |---|---|---|
-| Text translation | `POST https://tts.xalhar.top/a2m/v1/translate` | ¥0.1 / call |
-| Video dubbing | `POST https://tts.xalhar.top/a2m/v1/dubbing` | ¥1 / minute (min ¥2, billed on measured duration) |
+| Text translation | `POST https://zvex.cn/a2m/v1/translate` | ¥0.1 / call |
+| Video dubbing | `POST https://zvex.cn/a2m/v1/dubbing` | ¥1 / minute (min ¥2, billed on measured duration) |
 
 Flow: call without credentials → `402` + `Payment-Needed` signed bill →
 pay via Alipay AI Pay → retry with `Payment-Proof` → resource delivered.
@@ -146,7 +146,7 @@ Dubbing is asynchronous; poll `/a2m/v1/dubbing/status/{out_trade_no}` for
 the finished video and subtitles.
 
 Both services are live on the Alipay AI Pay service bazaar (search
-"声桥" or "zvex"). Protocol details: <https://tts.xalhar.top/docs/mcp>.
+"声桥" or "zvex"). Protocol details: <https://zvex.cn/docs/mcp>.
 Regular MCP clients without 402 support should use the API-key path above.
 
 ## Development
